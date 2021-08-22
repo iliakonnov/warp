@@ -46,18 +46,6 @@ pub trait FilterBase {
     type Future: Future<Output = Result<Self::Extract, Self::Error>> + Send;
 
     fn filter(&self, internal: Internal) -> Self::Future;
-
-    fn map_err<F, E>(self, _internal: Internal, fun: F) -> MapErr<Self, F>
-    where
-        Self: Sized,
-        F: Fn(Self::Error) -> E + Clone,
-        E: ::std::fmt::Debug + Send,
-    {
-        MapErr {
-            filter: self,
-            callback: fun,
-        }
-    }
 }
 
 // A crate-private argument to prevent users from calling methods on
@@ -203,7 +191,7 @@ pub trait Filter: FilterBase {
         }
     }
 
-    /// TODO
+    /// Like map, but accepts functions returning future.
     fn map_async<F>(self, fun: F) -> MapAsync<Self, F>
     where
         Self: Sized,
@@ -211,6 +199,18 @@ pub trait Filter: FilterBase {
         F::Output: Future + Send,
     {
         MapAsync {
+            filter: self,
+            callback: fun,
+        }
+    }
+
+    /// Maps error
+    fn map_err<F, E>(self, fun: F) -> MapErr<Self, F>
+    where
+        Self: Sized,
+        F: Fn(Self::Error) -> E,
+    {
+        MapErr {
             filter: self,
             callback: fun,
         }

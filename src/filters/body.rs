@@ -17,7 +17,7 @@ use serde::de::DeserializeOwned;
 use serde_json;
 use serde_urlencoded;
 
-use crate::filter::{filter_fn, filter_fn_one, Filter, FilterBase};
+use crate::filter::{filter_fn, filter_fn_one, Filter};
 use crate::reject::{self, Rejection};
 
 type BoxError = Box<dyn StdError + Send + Sync>;
@@ -50,7 +50,7 @@ pub(crate) fn body() -> impl Filter<Extract = (Body,), Error = Rejection> + Copy
 /// ```
 pub fn content_length_limit(limit: u64) -> impl Filter<Extract = (), Error = Rejection> + Copy {
     crate::filters::header::header2()
-        .map_err(crate::filter::Internal, |_| {
+        .map_err(|_| {
             tracing::debug!("content-length missing");
             reject::length_required()
         })

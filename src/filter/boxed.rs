@@ -46,7 +46,7 @@ impl<T: Tuple + Send> BoxedFilter<T> {
     {
         BoxedFilter {
             filter: Arc::new(BoxingFilter {
-                filter: filter.map_err(super::Internal, Into::into),
+                filter: filter.map_err(Into::into),
             }),
         }
     }
