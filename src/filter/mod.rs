@@ -412,6 +412,30 @@ pub trait Filter: FilterBase {
     {
         BoxedFilter::new(self)
     }
+
+    /// Boxes this filter into trait object, but only when `debug_assertions` are enabled.
+    #[cfg(debug_assertions)]
+    #[inline]
+    fn debug_boxed(self) -> BoxedFilter<Self::Extract>
+    where
+        Self: Sized + Send + Sync + 'static,
+        Self::Extract: Send,
+        Self::Error: Into<Rejection>,
+    {
+        self.boxed()
+    }
+
+    /// Boxes this filter into trait object, but only when `debug_assertions` are enabled.
+    #[cfg(not(debug_assertions))]
+    #[inline]
+    fn debug_boxed(self) -> Self
+    where
+        Self: Sized + Send + Sync + 'static,
+        Self::Extract: Send,
+        Self::Error: Into<Rejection>,
+    {
+        self
+    }
 }
 
 impl<T: FilterBase> Filter for T {}

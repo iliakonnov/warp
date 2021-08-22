@@ -87,6 +87,8 @@
 
 #[macro_use]
 mod error;
+#[macro_use]
+mod or_tree;
 mod filter;
 pub mod filters;
 mod generic;
