@@ -2,10 +2,11 @@ use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
+use either::Either;
 use futures::{ready, TryFuture};
 use pin_project::pin_project;
 
-use super::{Either, Filter, FilterBase, Internal, Tuple};
+use super::{Filter, FilterBase, Internal, Tuple};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Unify<F> {
@@ -44,7 +45,7 @@ where
     #[inline]
     fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
         Poll::Ready(match ready!(self.project().inner.try_poll(cx))? {
-            (Either::A(x),) | (Either::B(x),) => Ok(x),
+            (Either::Left(x),) | (Either::Right(x),) => Ok(x),
         })
     }
 }

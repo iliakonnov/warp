@@ -458,6 +458,7 @@ mod internal {
     use std::sync::Arc;
     use std::task::{Context, Poll};
 
+    use either::Either;
     use futures::{future, ready, TryFuture};
     use headers::Origin;
     use http::header;
@@ -465,7 +466,6 @@ mod internal {
 
     use super::{Configured, CorsForbidden, Validated};
     use crate::filter::{Filter, FilterBase, Internal, One};
-    use crate::generic::Either;
     use crate::reject::{CombineRejection, Rejection};
     use crate::route;
 
@@ -500,7 +500,7 @@ mod internal {
                         config: self.config.clone(),
                         origin,
                     };
-                    future::Either::Left(future::ok((Either::A((preflight,)),)))
+                    future::Either::Left(future::ok((Either::Left((preflight,)),)))
                 }
                 Ok(Validated::Simple(origin)) => future::Either::Right(WrappedFuture {
                     inner: self.inner.filter(Internal),
@@ -577,15 +577,15 @@ mod internal {
             match ready!(pin.inner.try_poll(cx)) {
                 Ok(inner) => {
                     let item = if let Some((config, origin)) = pin.wrapped.take() {
-                        (Either::A((Wrapped {
+                        (Either::Left((Wrapped {
                             config,
                             inner,
                             origin,
                         },)),)
                     } else {
-                        (Either::B(inner),)
+                        (Either::Right(inner),)
                     };
-                    let item = (Either::B(item),);
+                    let item = (Either::Right(item),);
                     Poll::Ready(Ok(item))
                 }
                 Err(err) => Poll::Ready(Err(err.into())),

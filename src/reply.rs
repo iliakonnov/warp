@@ -38,7 +38,8 @@ use std::convert::TryFrom;
 use std::error::Error as StdError;
 use std::fmt;
 
-use crate::generic::{Either, One};
+use crate::generic::One;
+use either::Either;
 use http::header::{HeaderName, HeaderValue, CONTENT_TYPE};
 use http::StatusCode;
 use hyper::Body;
@@ -510,8 +511,8 @@ where
     #[inline]
     fn into_response(self) -> Response {
         match self {
-            Either::A(a) => a.into_response(),
-            Either::B(b) => b.into_response(),
+            Either::Left(a) => a.into_response(),
+            Either::Right(b) => b.into_response(),
         }
     }
 }

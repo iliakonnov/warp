@@ -2,11 +2,11 @@ use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
+use either::Either;
 use futures::{ready, TryFuture};
 use pin_project::pin_project;
 
 use super::{Filter, FilterBase, Func, Internal};
-use crate::generic::Either;
 use crate::reject::IsReject;
 use crate::route;
 
@@ -89,12 +89,12 @@ where
             let pin = self.as_mut().project();
             let (err, second) = match pin.state.project() {
                 StateProj::First(first, second) => match ready!(first.try_poll(cx)) {
-                    Ok(ex) => return Poll::Ready(Ok((Either::A(ex),))),
+                    Ok(ex) => return Poll::Ready(Ok((Either::Left(ex),))),
                     Err(err) => (err, second),
                 },
                 StateProj::Second(second) => {
                     let ex2 = match ready!(second.try_poll(cx)) {
-                        Ok(ex2) => Ok((Either::B((ex2,)),)),
+                        Ok(ex2) => Ok((Either::Right((ex2,)),)),
                         Err(e) => Err(e),
                     };
                     self.set(RecoverFuture {

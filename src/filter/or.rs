@@ -2,11 +2,11 @@ use std::future::Future;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
+use either::Either;
 use futures::{ready, TryFuture};
 use pin_project::pin_project;
 
 use super::{Filter, FilterBase, Internal};
-use crate::generic::Either;
 use crate::reject::CombineRejection;
 use crate::route;
 
@@ -76,7 +76,7 @@ where
             let (err1, fut2) = match pin.state.project() {
                 StateProj::First(first, second) => match ready!(first.try_poll(cx)) {
                     Ok(ex1) => {
-                        return Poll::Ready(Ok((Either::A(ex1),)));
+                        return Poll::Ready(Ok((Either::Left(ex1),)));
                     }
                     Err(e) => {
                         pin.original_path_index.reset_path();
@@ -85,7 +85,7 @@ where
                 },
                 StateProj::Second(err1, second) => {
                     let ex2 = match ready!(second.try_poll(cx)) {
-                        Ok(ex2) => Ok((Either::B(ex2),)),
+                        Ok(ex2) => Ok((Either::Right(ex2),)),
                         Err(e) => {
                             pin.original_path_index.reset_path();
                             let err1 = err1.take().expect("polled after complete");
