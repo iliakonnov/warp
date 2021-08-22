@@ -1,6 +1,7 @@
 mod and;
 mod and_then;
 mod boxed;
+mod impl_either;
 mod flatten;
 mod map;
 mod map_async;
