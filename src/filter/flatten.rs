@@ -3,7 +3,7 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 
 use futures::{ready, TryFuture};
-use pin_project::{pin_project, project};
+use pin_project::pin_project;
 
 use super::{CombineRejection, Filter, FilterBase, Func, Internal};
 
@@ -33,7 +33,7 @@ where
     }
 }
 
-#[pin_project]
+#[pin_project(project = StateProj)]
 enum State<T, F>
 where
     T: Filter,
@@ -76,13 +76,11 @@ where
     >;
 
     #[inline]
-    #[project]
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
         loop {
             let pin = self.as_mut().project();
-            #[project]
             match pin.state.project() {
-                State::First(first, callback) => match ready!(first.poll(cx)) {
+                StateProj::First(first, callback) => match ready!(first.poll(cx)) {
                     Ok(ex) => {
                         let second = callback.call(ex);
                         self.set(FlattenFuture {
@@ -93,21 +91,21 @@ where
                         return Poll::Ready(Err(From::from(e)));
                     }
                 },
-                State::Second(second) => {
+                StateProj::Second(second) => {
                     let filter = ready!(second.poll(cx));
                     let third = filter.filter(Internal);
                     self.set(FlattenFuture {
                         state: State::Third(third),
                     });
                 }
-                State::Third(third) => match ready!(third.try_poll(cx)) {
+                StateProj::Third(third) => match ready!(third.try_poll(cx)) {
                     Ok(item) => {
                         self.set(FlattenFuture { state: State::Done });
                         return Poll::Ready(Ok(item));
                     }
                     Err(e) => return Poll::Ready(Err(From::from(e))),
                 },
-                State::Done => panic!("polled after complete"),
+                StateProj::Done => panic!("polled after complete"),
             }
         }
     }
